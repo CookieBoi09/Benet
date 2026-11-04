@@ -7,10 +7,14 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        arch: [arm64, x64]
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x64
+            runner: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,16 +25,19 @@ jobs:
       - run: npm run check && npm test && npm run build
       - run: npx install-electron
       - name: Check native desktop startup and persistence
-        if: matrix.arch == 'arm64'
         run: npm run test:desktop
-      - name: Package unsigned DMG
+      - name: Package ad-hoc signed DMG
         run: npx electron-builder --mac dmg --${{ matrix.arch }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify DMG, signatures, architecture, and packaged app launch
+        run: npm run verify:mac -- ${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
           name: Benet-mac-${{ matrix.arch }}
-          path: dist/*.dmg
+          path: |
+            dist/*.dmg
+            dist/*.sha256
           if-no-files-found: error
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -49,4 +56,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" release-assets/*.dmg --title "Benet $RELEASE_TAG" --notes-file desktop/RELEASE.md
+        run: gh release create "$RELEASE_TAG" release-assets/*.dmg release-assets/*.sha256 --title "Benet $RELEASE_TAG" --notes-file desktop/RELEASE.md

@@ -1,18 +1,19 @@
 {
   "name": "benet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "test": "node --test",
-    "check": "node --check src/app.js && node --check src/model.js && node --check server.js && node --check desktop/main.cjs && node --check desktop/preload.cjs",
+    "check": "node --check src/app.js && node --check src/model.js && node --check server.js && node --check desktop/main.cjs && node --check desktop/preload.cjs && node --check scripts/verify-macos.mjs",
     "build": "node scripts/build.js",
     "prestart": "npm run build",
     "desktop": "npm run build && electron .",
     "dist:mac": "npm run build && electron-builder --mac dmg --publish never",
     "test:browser": "node scripts/browser-smoke.mjs",
-    "test:desktop": "node scripts/desktop-smoke.mjs"
+    "test:desktop": "node scripts/desktop-smoke.mjs",
+    "verify:mac": "node scripts/verify-macos.mjs"
   },
   "devDependencies": {
     "electron": "45.2.2",
@@ -46,9 +47,12 @@
           ]
         }
       ],
-      "identity": null,
+      "identity": "-",
       "icon": "build/icon.png",
-      "artifactName": "Benet-${version}-${arch}.${ext}"
+      "artifactName": "Benet-${version}-${arch}.${ext}",
+      "strictVerify": true,
+      "hardenedRuntime": true,
+      "notarize": false
     },
     "dmg": {
       "title": "Benet ${version}",

@@ -32,7 +32,7 @@ In Notion, export a page as Markdown, unzip the export if necessary, then import
 
 Download the Apple Silicon (`arm64`) or Intel (`x64`) DMG from [GitHub Releases](https://github.com/CookieBoi09/Benet/releases) once the macOS workflow has completed. Drag Benet into Applications. The Electron desktop app includes native open/save dialogs, menu shortcuts, persistent local storage, and all web editor and quiz features. It runs offline.
 
-**The initial build is unsigned and unnotarized.** Apple signing credentials are not configured. macOS may block opening it by default. Desktop app storage is separate from browser storage: export your library from the HTML version, then import it in the desktop app. Keep backups before updating. Existing browser storage keys and JSON format remain compatible.
+**Version 1.0.1 uses ad-hoc signing and verifies the packaged app before upload.** The original 1.0.0 disabled signing and should be replaced. Ad-hoc signing repairs bundle integrity but is not an Apple Developer ID signature or notarization; Gatekeeper may still block downloaded copies. Apple signing credentials are not configured. Desktop app storage is separate from browser storage: export your library from the HTML version, then import it in the desktop app. Keep backups before updating. Existing browser storage keys and JSON format remain compatible.
 
 ```sh
 npx install-electron # download the development Electron runtime
@@ -47,4 +47,4 @@ A `v*` tag builds both DMGs on GitHub Actions and publishes them as GitHub Relea
 
 The model suite covers breadth-first ordering, property scope, polygon selection, and Markdown hierarchy. Browser smoke validation additionally exercised complete quizzes and self-grading, creating connected nodes, lasso tagging, property quizzes, persistence after reload, and read-only Notion import using Chromium.
 
-`npm run test:browser` runs the complete regression flow using Chromium (set `BROWSER_EXECUTABLE` if needed), including folder operations, old/new backup imports, both quiz modes, drawing, lasso, deletion, dragging, and mobile layout. Screenshots are saved to ignored `artifacts/`. `npm run test:desktop` tests the real Electron renderer and IPC, using simulated native file choices and an isolated temporary user profile.
+`npm run test:browser` runs the complete regression flow using Chromium (set `BROWSER_EXECUTABLE` if needed), including folder operations, old/new backup imports, both quiz modes, drawing, lasso, deletion, dragging, and mobile layout. Screenshots are saved to ignored `artifacts/`. `npm run verify:mac -- arm64` (or `x64`) verifies the built DMG, mounts it read-only, checks all bundle signatures and CPU architecture, launches the packaged app, then writes a SHA-256 checksum file. It must run on macOS of the matching architecture. `npm run test:desktop` tests the real Electron renderer and IPC, using simulated native file choices and an isolated temporary user profile.
