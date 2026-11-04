@@ -12,6 +12,8 @@ const fixture={id:'map',name:'Group movement',properties:['Study'],view:{x:0,y:0
  {id:'d',text:'Automatic edge',parent:'b',x:700,y:420,properties:[]}
 ]};
 const node=id=>p.locator(`[data-node="${id}"]`);
+const editorFor=id=>node(id).locator('.node-content');
+async function dragRight(x,y,dx,dy){await p.mouse.move(x,y);await p.mouse.down({button:'right'});await p.mouse.move(x+dx,y+dy,{steps:8});await p.mouse.up({button:'right'});}
 const data=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('benet.pages.v1'))[0]);
 const near=(a,b,message)=>assert.ok(Math.abs(a-b)<.001,message+`: ${a} vs ${b}`);
 async function settle(){await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
@@ -62,5 +64,24 @@ try{
  box=await node('r').boundingBox();await p.mouse.click(box.x+30,box.y+30,{button:'right'});
  assert.equal(await p.locator('.node-content:focus').count(),0);assert.equal(await p.locator('.draft-edge').count(),0);
  await p.reload();await node('r').waitFor();assert.equal((await data()).nodes[0].text,text);
- assert.deepEqual(errors,[]);console.log('PASS: enlarged hit targets, visible-box priority, lasso group movement at different zoom levels, internal/incoming/outgoing/unrelated paths, persistence, Enter/Shift+Enter, and right-click exit.');
+ // Right-button panning works over nodes in every mode without editing geometry.
+ await reset();
+ for(const mode of ['draw','lasso','pan']){
+  await p.click(`[data-mode="${mode}"]`);await p.click('#zoom-in');before=await data();box=await node('a').boundingBox();
+  await p.mouse.move(box.x+box.width/2,box.y+box.height/2);await p.mouse.down({button:'right'});await p.mouse.move(box.x+box.width/2+70,box.y+box.height/2+40,{steps:8});await p.mouse.up({button:'right'});
+  const after=await data();near(after.view.x,before.view.x+70,'Right-pan x');near(after.view.y,before.view.y+40,'Right-pan y');assert.equal(after.view.z,before.view.z);assert.deepEqual(after.nodes,before.nodes);assert.equal(await p.locator('.draft-edge').count(),0);
+ }
+ // Captured right-drag remains active outside the canvas; releasing stops it.
+ await reset();const canvas=await p.locator('#canvas').boundingBox();before=await data();
+ await p.mouse.move(canvas.x+20,canvas.y+100);await p.mouse.down({button:'right'});await p.mouse.move(canvas.x-10,canvas.y+50,{steps:5});await p.mouse.up({button:'right'});
+ let view=(await data()).view;near(view.x,before.view.x-30,'Outside pan x');near(view.y,before.view.y-50,'Outside pan y');await p.mouse.move(canvas.x+200,canvas.y+200);assert.deepEqual((await data()).view,view);
+ assert.equal(await p.locator('#canvas').evaluate(el=>el.classList.contains('panning')),false);
+ // A simple right-click exits and resizes without moving the viewport.
+ await editorFor('r').fill('Edited text');before=await data();box=await node('r').boundingBox();await p.mouse.click(box.x+box.width/2,box.y+10,{button:'right'});
+ assert.deepEqual((await data()).view,before.view);assert.equal((await data()).nodes[0].text,'Edited text');assert.equal((await data()).nodes[0].fitted,true);assert.equal(await p.locator('.node-content:focus').count(),0);
+ // Quiz recall state and read-only data survive panning.
+ await p.click('#open-quiz');await p.click('#start-quiz');const quizText=await p.locator('#quiz-panel').innerText();before=await data();
+ await dragRight(canvas.x+150,canvas.y+200,30,-20);assert.deepEqual((await data()).nodes,before.nodes);assert.equal(await p.locator('#quiz-panel').innerText(),quizText);await p.click('#end-quiz');
+ const imported=structuredClone(fixture);imported.readonly=true;await p.evaluate(f=>localStorage.setItem('benet.pages.v1',JSON.stringify([f])),imported);await p.reload();await node('r').waitFor();await settle();before=await data();await dragRight(canvas.x+150,canvas.y+200,-40,35);const afterReadonly=await data();near(afterReadonly.view.x,before.view.x-40,'Read-only pan');assert.deepEqual(afterReadonly.nodes,before.nodes);
+ assert.deepEqual(errors,[]);console.log('PASS: enlarged hit targets, visible-box priority, lasso group movement at different zoom levels, internal/incoming/outgoing/unrelated paths, persistence, Enter/Shift+Enter, right-click exit, and right-button panning across modes, quizzes, read-only maps, and canvas boundaries.');
 }finally{await browser.close();}

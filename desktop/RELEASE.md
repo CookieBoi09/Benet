@@ -1,5 +1,7 @@
 Benet — a place for growing ideas.
 
+Version 1.0.6 adds right-click-and-drag panning anywhere on the canvas, including over nodes and during quizzes. A simple right-click still finishes editing and fits the box to its text.
+
 Version 1.0.5 fits each box to its text when editing ends, with compact padding and wrapping for long text. Line breaks, properties, custom connections, lasso movement, and saved maps are preserved.
 
 Version 1.0.4 doubles node drag target areas, lets Enter insert new lines, and adds lasso group dragging with internal and external connections kept attached. Right-click finishes editing.

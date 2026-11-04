@@ -18,3 +18,5 @@
 .node.fitted .node-content{min-height:0;padding:10px 14px}
 .node.fitted .node-content:empty:before{content:'…'}
 .node-tags span{max-width:100%;overflow-wrap:anywhere}
+
+#canvas.panning,#canvas.panning *{cursor:grabbing!important;user-select:none!important}
