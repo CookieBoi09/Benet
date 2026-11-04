@@ -1,5 +1,7 @@
 Benet — a place for growing ideas.
 
+Version 1.0.2 replaces the fixed Properties sidebar with a compact toolbar dropdown. Click Properties to open all existing controls; Escape or an outside click closes it.
+
 Choose **arm64** for Apple Silicon (M1 or newer) or **x64** for Intel Macs. Open the DMG and drag Benet into Applications.
 
 Includes the forest-green workspace, dropdown folder library, freehand smoothed connections, movable nodes, branch deletion, lasso properties, breadth-first quizzes, and Notion Markdown imports. Import and export use native macOS file dialogs. Maps are saved locally in Benet's application data.

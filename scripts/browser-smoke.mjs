@@ -21,6 +21,7 @@ async function quiz(scope=''){
 }
 try {
  await p.goto('http://localhost:4173');await p.locator('.node').first().waitFor();
+ assert.equal(await p.locator('#properties').isVisible(),false);await p.click('#toggle-properties');assert.equal(await p.locator('#properties').isVisible(),true);await p.keyboard.press('Escape');assert.equal(await p.locator('#toggle-properties').getAttribute('aria-expanded'),'false');await p.click('#toggle-properties');await p.click('#title');assert.equal(await p.locator('#properties').isVisible(),false);
  await mkdir('artifacts',{recursive:true});await p.screenshot({path:'artifacts/forest-desktop.png'});
  await quiz();await quiz('Ideas');
  await p.click('#library-toggle');await p.click('#new-folder');await p.fill('#folder-name','Biology');await p.locator('#folder-form button.primary').click();
@@ -37,9 +38,9 @@ try {
  const after=(await library()).at(-1);assert.equal(after.nodes[1].x,before.nodes[1].x+60);assert.deepEqual(after.nodes[1].path[0],before.nodes[1].path[0]);
  await p.click('[data-mode="lasso"]');
  await p.mouse.move(c.x+20,c.y+90);await p.mouse.down();for(const [x,y] of [[670,90],[670,420],[20,420],[20,90]])await p.mouse.move(c.x+x,c.y+y,{steps:12});await p.mouse.up();
- assert.equal(await p.locator('.node.selected').count(),2);await p.fill('#property-name','Study');await p.click('#assign');assert.equal(await p.locator('.node-tags').count(),2);
+ assert.equal(await p.locator('.node.selected').count(),2);await p.click('#toggle-properties');await p.fill('#property-name','Study');await p.click('#assign');assert.equal(await p.locator('.node-tags').count(),2);
  await quiz('Study');
- await p.click('#clear-properties');assert.equal(await p.locator('.node-tags').count(),0);
+ await p.click('#toggle-properties');await p.click('#clear-properties');assert.equal(await p.locator('.node-tags').count(),0);
  await p.click('[data-mode="draw"]');await p.locator('.node-content').first().click();await p.keyboard.press('Delete');await p.locator('#delete-nodes-dialog').waitFor();assert.match(await p.locator('#delete-nodes-message').innerText(),/2 nodes/);await p.locator('#delete-nodes-dialog button[value="cancel"]').click();assert.equal(await nodes().count(),2);
  // Folder movement and expanded browser preserve data.
  await p.click('#move-page');await p.selectOption('#move-destination',{label:'My library / Biology'});await p.click('#confirm-move');
