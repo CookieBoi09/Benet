@@ -1,6 +1,6 @@
 {
   "name": "benet",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,8 @@
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:desktop": "node scripts/desktop-smoke.mjs",
     "verify:mac": "node scripts/verify-macos.mjs",
-    "test:interactions": "node scripts/interaction-smoke.mjs"
+    "test:interactions": "node scripts/interaction-smoke.mjs",
+    "test:sizing": "node scripts/sizing-smoke.mjs"
   },
   "devDependencies": {
     "electron": "45.2.2",

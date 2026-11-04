@@ -13,3 +13,8 @@
 @media(max-width:650px){.properties-trigger{padding:9px 7px;font-size:10px;gap:4px}.properties-trigger>svg{width:10px}#properties-dropdown #properties{right:-45px;max-height:calc(100dvh - 230px)}#title{max-width:30vw}.header-actions{gap:1px}}
 
 #canvas.near-node{cursor:grab}
+
+.node.fitted{min-height:0;border-radius:12px}
+.node.fitted .node-content{min-height:0;padding:10px 14px}
+.node.fitted .node-content:empty:before{content:'…'}
+.node-tags span{max-width:100%;overflow-wrap:anywhere}
