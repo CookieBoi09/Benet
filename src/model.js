@@ -62,6 +62,12 @@ export function shiftPath(points, startDelta, endDelta) {
     return {x:p.x+startDelta.x*(1-t)+endDelta.x*t, y:p.y+startDelta.y*(1-t)+endDelta.y*t};
   });
 }
+export function dragBounds(x, y, width, height) {
+  // Scale both dimensions by sqrt(2): twice the area, centered on the box.
+  const paddingX = width * (Math.SQRT2 - 1) / 2;
+  const paddingY = height * (Math.SQRT2 - 1) / 2;
+  return {left:x-paddingX, top:y-paddingY, right:x+width+paddingX, bottom:y+height+paddingY};
+}
 export function inside(point, polygon) {
   let result = false;
   for (let i=0,j=polygon.length-1;i<polygon.length;j=i++) {

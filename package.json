@@ -1,6 +1,6 @@
 {
   "name": "benet",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "dist:mac": "npm run build && electron-builder --mac dmg --publish never",
     "test:browser": "node scripts/browser-smoke.mjs",
     "test:desktop": "node scripts/desktop-smoke.mjs",
-    "verify:mac": "node scripts/verify-macos.mjs"
+    "verify:mac": "node scripts/verify-macos.mjs",
+    "test:interactions": "node scripts/interaction-smoke.mjs"
   },
   "devDependencies": {
     "electron": "45.2.2",

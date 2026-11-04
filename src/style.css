@@ -11,3 +11,5 @@
 #properties-dropdown #properties{top:calc(100% + 10px);right:0;width:260px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 265px);overflow:auto;box-shadow:0 14px 36px #244c3820;text-align:left}
 #properties-dropdown #properties>p:first-child{margin-top:0}
 @media(max-width:650px){.properties-trigger{padding:9px 7px;font-size:10px;gap:4px}.properties-trigger>svg{width:10px}#properties-dropdown #properties{right:-45px;max-height:calc(100dvh - 230px)}#title{max-width:30vw}.header-actions{gap:1px}}
+
+#canvas.near-node{cursor:grab}

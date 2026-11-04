@@ -54,3 +54,13 @@ test('moving a path endpoint keeps the other attached and distributes displaceme
  assert.deepEqual(shiftPath(path,{x:10,y:20},{x:10,y:20}),[{x:10,y:20},{x:35,y:20},{x:110,y:20}]);
  assert.deepEqual(path,[{x:0,y:0},{x:25,y:0},{x:100,y:0}]);
 });
+
+test('node drag targets have twice the visible area and stay centered at any size', async () => {
+ const {dragBounds}=await import('../src/model.js');
+ for(const [w,h] of [[210,76],[210,320],[210,1500]]){
+  const b=dragBounds(-100,40,w,h);
+  assert.ok(Math.abs((b.right-b.left)*(b.bottom-b.top)-2*w*h)<1e-7);
+  assert.ok(Math.abs((b.left+b.right)/2-(-100+w/2))<1e-10);
+  assert.ok(Math.abs((b.top+b.bottom)/2-(40+h/2))<1e-10);
+ }
+});

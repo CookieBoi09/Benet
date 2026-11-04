@@ -1,4 +1,4 @@
-import {uid, quizPlan, inside, markdownNodes, depth, branchIds, smoothPath, shiftPath} from './model.js';
+import {uid, quizPlan, inside, markdownNodes, depth, branchIds, smoothPath, shiftPath, dragBounds} from './model.js';
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY='benet.pages.v1';
 const demo=()=>{const root=uid(), a=uid(), b=uid();return {id:uid(),name:'A little room for ideas',readonly:false,nodes:[{id:root,text:'Something worth exploring',x:100,y:250,parent:null,properties:['Ideas']},{id:a,text:'What if we tried…',x:410,y:140,parent:root,properties:['Ideas']},{id:b,text:'Make space for curiosity',x:410,y:360,parent:root,properties:[]},{id:uid(),text:'Follow the unexpected',x:710,y:140,parent:a,properties:['Ideas']}],properties:['Ideas'],view:{x:80,y:60,z:1}}};
@@ -27,7 +27,7 @@ app.innerHTML=`
 <div id="library-dropdown" class="library-dropdown hidden"><div class="library-heading"><div><span class="eyebrow">YOUR LITTLE FOREST</span><h2>Your ideas, a place to grow.</h2></div><button id="expand-library" title="Expand library" aria-label="Expand library">${icon('expand')}</button></div><div class="library-controls"><nav id="breadcrumbs" aria-label="Folder path"></nav><div class="library-buttons"><button id="rename-folder">Rename folder</button><button id="delete-folder" title="Remove folder">${icon('trash')}</button><button id="new-folder">${icon('plus')}New folder</button><button id="new-in-library">${icon('plus')}New map</button></div></div><label class="search-field">${icon('search')}<input id="library-search" placeholder="Find something you planted…" aria-label="Search maps and folders"></label><div id="pages" class="file-grid"></div><div class="library-footer"><span id="count"></span><span>Stored on this device · Export to keep a backup</span></div></div></section>
 <main><div class="map-header"><div class="map-heading"><span class="eyebrow">MIND MAP <span id="map-folder"></span></span><input id="title" aria-label="Page title"><span id="readonly"></span></div><div class="header-actions"><span id="save-status">All changes saved</span><button id="move-page" class="icon-button" title="Move map to folder" aria-label="Move map to folder">${icon('folder')}</button><button id="delete" class="icon-button" title="Delete page" aria-label="Delete page">${icon('trash')}</button><div id="properties-dropdown" class="properties-dropdown"><button id="toggle-properties" class="properties-trigger" aria-expanded="false" aria-controls="properties">◈ <span>Properties</span>${icon('down')}</button></div><button id="open-quiz" class="primary">${icon('play')}<span>Practice this map</span></button></div></div>
 <div class="workspace"><div id="canvas" tabindex="0" aria-label="Mind map canvas"><div id="world"><svg id="edges"></svg><div id="nodes"></div></div><svg id="overlay"></svg></div><div class="canvas-top"><span class="pill"><span class="green-dot"></span><span id="mode-label">Let your ideas connect</span></span><span id="node-count"></span></div><section id="properties" class="panel hidden" aria-labelledby="toggle-properties"><p>A little order for your growing ideas.</p><select id="property-filter" aria-label="Highlight a property"><option value="">All properties</option></select><div id="property-chips"></div><div class="separator"></div><div id="selection-count">Lasso nodes to organize them</div><div class="property-input"><input id="property-name" placeholder="New or existing property" aria-label="Property name"><button id="assign" title="Apply property" aria-label="Apply property">＋</button></div><button id="clear-properties" class="text-button">Remove selected properties</button><button id="remove-nodes" class="text-button">${icon('trash')}Delete selected nodes</button></section><div id="quiz-panel" class="panel hidden"></div>
-<div class="bottom-center"><div id="toolbar"><button data-mode="draw" class="chosen" title="Draw nodes">${icon('arrow')}<span>Connect</span></button><button data-mode="pan" title="Pan canvas">${icon('move')}<span>Move</span></button><button data-mode="lasso" title="Lasso selection">${icon('lasso')}<span>Lasso</span></button><i></i><button id="fit" title="Fit map" aria-label="Fit map">${icon('expand')}</button><button id="pause-drawing" title="Pause drawing" aria-label="Pause drawing">Ⅱ</button></div><div id="help">Drag a box to move it · Delete removes it · Move outside to draw a path</div></div><div class="zoom"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-value">100%</span><button id="zoom-in" aria-label="Zoom in">＋</button></div><div id="toast" role="status"></div></div></main><footer class="app-footer"><span><i class="green-dot"></i>Room to think. Space to connect.</span><span>BENET / YOUR PERSONAL KNOWLEDGE GARDEN</span></footer>
+<div class="bottom-center"><div id="toolbar"><button data-mode="draw" class="chosen" title="Draw nodes">${icon('arrow')}<span>Connect</span></button><button data-mode="pan" title="Pan canvas">${icon('move')}<span>Move</span></button><button data-mode="lasso" title="Lasso selection">${icon('lasso')}<span>Lasso</span></button><i></i><button id="fit" title="Fit map" aria-label="Fit map">${icon('expand')}</button><button id="pause-drawing" title="Pause drawing" aria-label="Pause drawing">Ⅱ</button></div><div id="help">Drag selected boxes to move · Enter for a new line · Right-click to finish</div></div><div class="zoom"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-value">100%</span><button id="zoom-in" aria-label="Zoom in">＋</button></div><div id="toast" role="status"></div></div></main><footer class="app-footer"><span><i class="green-dot"></i>Room to think. Space to connect.</span><span>BENET / YOUR PERSONAL KNOWLEDGE GARDEN</span></footer>
 <input type="file" id="file" accept=".json,.md,.markdown,.txt" hidden><dialog id="quiz-dialog"><form method="dialog"><span class="eyebrow">A MOMENT TO REMEMBER</span><h2>Turn connections into knowledge.</h2><p>Recall each branch, reveal the answer, then grade yourself. We’ll work from the roots to the leaves.</p><label>Practice scope<select id="quiz-scope"></select></label><div class="dialog-actions"><button value="cancel">Not now</button><button id="start-quiz" type="button" class="primary">Start practice →</button></div></form></dialog>
 <dialog id="folder-dialog"><form id="folder-form"><span class="eyebrow">MAKE ROOM FOR IDEAS</span><h2 id="folder-dialog-title">New folder</h2><label>Folder name<input id="folder-name" required maxlength="80" autocomplete="off"></label><div class="dialog-actions"><button type="button" id="cancel-folder">Cancel</button><button class="primary">Save folder</button></div></form></dialog>
 <dialog id="move-dialog"><form method="dialog"><h2>Find a home for this map.</h2><label>Destination folder<select id="move-destination"></select></label><div class="dialog-actions"><button value="cancel">Cancel</button><button id="confirm-move" type="button" class="primary">Move map</button></div></form></dialog>
@@ -81,32 +81,72 @@ $('#nodes').addEventListener('focusin',e=>{if(centerEditor(e.target))save();});
 window.addEventListener('resize',()=>{if(centerEditor(document.activeElement))save();});
 function create(p){recordTrace(p);const path=active&&traceOwner===active?[...trace,{...p}]:null;const n={id:uid(),text:'',x:p.x-105,y:p.y-35,parent:active,path,properties:[]};resetTrace();page.nodes.push(n);active=n.id;selected=new Set([n.id]);render();document.querySelector(`[data-node="${n.id}"] .node-content`).focus({preventScroll:true});save();}
 $('#nodes').addEventListener('input',e=>{const node=page.nodes.find(n=>n.id===e.target.closest('[data-node]')?.dataset.node);if(node){node.text=e.target.innerText;centerEditor(e.target);save();drawEdges();}});
-$('#nodes').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.target.blur();$('#canvas').focus();}if(e.key==='Escape'){e.target.blur();active=null;drawEdges();}});
+$('#nodes').addEventListener('keydown',e=>{if(e.key==='Escape'){e.target.blur();active=null;drawEdges();}});
 $('#nodes').addEventListener('paste',e=>{if(!e.target.isContentEditable)return;e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));});
+function dragTarget(e){
+ const direct=e.target.closest('[data-node]');if(direct)return direct;
+ const p=point(e);let closest=null,distance=Infinity;
+ // Visible boxes win over neighbouring expanded hitboxes; among halos, pick
+ // the closest visible edge, with later (topmost) nodes winning ties.
+ for(const el of [...$('#nodes').children].reverse()){
+  const node=page.nodes.find(n=>n.id===el.dataset.node);
+  const w=el.offsetWidth,h=el.offsetHeight;
+  const dx=Math.max(node.x-p.x,0,p.x-node.x-w),dy=Math.max(node.y-p.y,0,p.y-node.y-h);
+  if(dx===0&&dy===0)return el;
+  const bounds=dragBounds(node.x,node.y,w,h),d=Math.hypot(dx,dy);
+  if(p.x>=bounds.left&&p.x<=bounds.right&&p.y>=bounds.top&&p.y<=bounds.bottom&&d<distance){closest=el;distance=d;}
+ }
+ return closest;
+}
+function beginNodeDrag(e,el){
+ const id=el.dataset.node;
+ if(!selected.has(id))selected=new Set([id]);
+ const group=selected.size>1;
+ // A group click or halo click selects/drags without entering a text editor.
+ if(group||!e.target.closest('[data-node]')){e.preventDefault();document.activeElement?.blur();$('#canvas').focus();}
+ drag={type:'node',clickedId:id,editor:e.target.closest('.node-content'),start:point(e),clientX:e.clientX,clientY:e.clientY,moved:false,group,
+  positions:page.nodes.filter(n=>selected.has(n.id)).map(n=>({id:n.id,x:n.x,y:n.y})),
+  paths:page.nodes.filter(n=>n.path?.length&&(selected.has(n.id)||selected.has(n.parent))).map(n=>({id:n.id,source:selected.has(n.parent),target:selected.has(n.id),points:n.path.map(p=>({...p}))}))};
+ $('#canvas').setPointerCapture(e.pointerId);
+ resetTrace();active=group?null:id;
+ $('#selection-count').textContent=`${selected.size} ${group?'nodes':'node'} selected`;
+ document.querySelectorAll('.node').forEach(node=>{node.classList.toggle('selected',selected.has(node.dataset.node));node.classList.toggle('active',node.dataset.node===active);});
+ drawEdges();
+}
 $('#canvas').addEventListener('pointerdown',e=>{
- if(e.button===2)return;const n=e.target.closest('[data-node]');
+ if(e.button===2)return;const n=dragTarget(e);
  if(e.button===1||(mode==='pan'&&(!n||quiz||page.readonly))){e.preventDefault();drag={type:'pan',x:e.clientX,y:e.clientY,v:{...page.view}};$('#canvas').setPointerCapture(e.pointerId);return;}
  if(quiz||page.readonly)return;
- if(mode==='lasso'){e.preventDefault();polygon=[point(e)];drag={type:'lasso'};$('#canvas').setPointerCapture(e.pointerId);return;}
- if(n){const node=page.nodes.find(item=>item.id===n.dataset.node);drag={type:'node',id:node.id,start:point(e),clientX:e.clientX,clientY:e.clientY,x:node.x,y:node.y,moved:false,paths:page.nodes.filter(item=>item.path?.length&&(item.id===node.id||item.parent===node.id)).map(item=>({id:item.id,source:item.parent===node.id,points:item.path.map(p=>({...p}))}))};resetTrace();selected=new Set([n.dataset.node]);$('#selection-count').textContent='1 node selected';document.querySelectorAll('.node').forEach(el=>el.classList.toggle('selected',el===n));active=n.dataset.node;document.querySelectorAll('.node').forEach(el=>el.classList.toggle('active',el===n));drawEdges();}else{e.preventDefault();create(point(e));}
+ if(mode==='lasso'&&(!n||!selected.has(n.dataset.node))){e.preventDefault();polygon=[point(e)];drag={type:'lasso'};$('#canvas').setPointerCapture(e.pointerId);return;}
+ if(n)beginNodeDrag(e,n);else{e.preventDefault();create(point(e));}
 });
 $('#canvas').addEventListener('pointermove',e=>{pointer=point(e);if(drag?.type==='node'){
  if(!drag.moved&&Math.hypot(e.clientX-drag.clientX,e.clientY-drag.clientY)<5)return;
  e.preventDefault();if(!drag.moved){drag.moved=true;document.activeElement?.blur();window.getSelection()?.removeAllRanges();$('#canvas').setPointerCapture(e.pointerId);$('#canvas').classList.add('dragging-node');}
- const node=page.nodes.find(n=>n.id===drag.id),delta={x:pointer.x-drag.start.x,y:pointer.y-drag.start.y};
- node.x=drag.x+delta.x;node.y=drag.y+delta.y;
- const el=document.querySelector(`[data-node="${node.id}"]`);el.style.left=node.x+'px';el.style.top=node.y+'px';
- for(const path of drag.paths){page.nodes.find(n=>n.id===path.id).path=shiftPath(path.points,path.source?delta:{x:0,y:0},path.source?{x:0,y:0}:delta);}
+ const delta={x:pointer.x-drag.start.x,y:pointer.y-drag.start.y};
+ for(const position of drag.positions){
+  const node=page.nodes.find(n=>n.id===position.id);node.x=position.x+delta.x;node.y=position.y+delta.y;
+  const el=document.querySelector(`[data-node="${node.id}"]`);el.style.left=node.x+'px';el.style.top=node.y+'px';
+ }
+ for(const path of drag.paths){page.nodes.find(n=>n.id===path.id).path=shiftPath(path.points,path.source?delta:{x:0,y:0},path.target?delta:{x:0,y:0});}
  resetTrace();drawEdges();
- }else if(drag?.type==='pan'){page.view.x=drag.v.x+e.clientX-drag.x;page.view.y=drag.v.y+e.clientY-drag.y;transform();}else if(drag?.type==='lasso'){polygon.push(point(e));const v=page.view;$('#overlay').innerHTML=`<polygon points="${polygon.map(p=>`${p.x*v.z+v.x},${p.y*v.z+v.y}`).join(' ')}"/>`;}else{recordTrace(pointer);drawEdges();}});
+ }else if(drag?.type==='pan'){page.view.x=drag.v.x+e.clientX-drag.x;page.view.y=drag.v.y+e.clientY-drag.y;transform();}else if(drag?.type==='lasso'){polygon.push(point(e));const v=page.view;$('#overlay').innerHTML=`<polygon points="${polygon.map(p=>`${p.x*v.z+v.x},${p.y*v.z+v.y}`).join(' ')}"/>`;}else{const target=!quiz&&!page.readonly?dragTarget(e):null;$('#canvas').classList.toggle('near-node',!!target&&(mode!=='lasso'||selected.has(target.dataset.node)));recordTrace(pointer);drawEdges();}});
 function endDrag(e){
  const finished=drag;
  if(finished?.type==='node'&&finished.moved){active=null;resetTrace();$('#canvas').classList.remove('dragging-node');renderNodes();$('#canvas').focus();}
  if(finished?.type==='lasso'){selected=new Set(page.nodes.filter(n=>inside({x:n.x+105,y:n.y+height(n)/2},polygon)).map(n=>n.id));$('#overlay').innerHTML='';render();$('#canvas').focus();}
  drag=null;
+ // A short click edits one member; a drag keeps the full group selected.
+ if(finished?.type==='node'&&finished.group&&!finished.moved&&finished.editor&&e.type==='pointerup'){
+  selected=new Set([finished.clickedId]);active=finished.clickedId;
+  $('#selection-count').textContent='1 node selected';
+  document.querySelectorAll('.node').forEach(el=>{el.classList.toggle('selected',el.dataset.node===active);el.classList.toggle('active',el.dataset.node===active);});
+  finished.editor.focus({preventScroll:true});
+ }
  // Wait until release to distinguish a click-to-edit from dragging a box.
- if(finished?.type==='node'&&!finished.moved&&e.type==='pointerup')centerEditor(document.activeElement);
+ if(finished?.type==='node'&&!finished.moved&&!finished.group&&e.type==='pointerup')centerEditor(document.activeElement);
  if(finished)save();
+ $('#canvas').classList.remove('near-node');
 }
 $('#canvas').addEventListener('pointerup',endDrag);$('#canvas').addEventListener('pointercancel',endDrag);
 $('#canvas').addEventListener('contextmenu',e=>{e.preventDefault();active=null;resetTrace();document.activeElement?.blur();renderNodes();$('#canvas').focus();});

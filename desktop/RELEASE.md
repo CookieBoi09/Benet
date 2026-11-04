@@ -1,5 +1,7 @@
 Benet — a place for growing ideas.
 
+Version 1.0.4 doubles node drag target areas, lets Enter insert new lines, and adds lasso group dragging with internal and external connections kept attached. Right-click finishes editing.
+
 Version 1.0.3 automatically centers the box being edited without changing zoom or node positions. Long boxes follow the insertion point; dragging stays manual.
 
 Version 1.0.2 replaces the fixed Properties sidebar with a compact toolbar dropdown. Click Properties to open all existing controls; Escape or an outside click closes it.

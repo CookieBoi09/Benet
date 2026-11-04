@@ -42,7 +42,7 @@ try {
  await p.keyboard.insertText('!');await assertCentered(nodes().first());await p.click('#pause-drawing');await p.click('#fit');
 
  await p.click('[data-mode="lasso"]');
- const boxes=await Promise.all((await nodes().all()).map(n=>n.boundingBox()));const left=Math.min(...boxes.map(b=>b.x))-15,top=Math.min(...boxes.map(b=>b.y))-15,right=Math.max(...boxes.map(b=>b.x+b.width))+15,bottom=Math.max(...boxes.map(b=>b.y+b.height))+15;
+ const boxes=await Promise.all((await nodes().all()).map(n=>n.boundingBox()));const padding=Math.max(...boxes.map(b=>b.height))*(Math.SQRT2-1)/2+15;const left=Math.max(c.x+5,Math.min(...boxes.map(b=>b.x))-60),top=Math.min(...boxes.map(b=>b.y))-padding,right=Math.max(...boxes.map(b=>b.x+b.width))+60,bottom=Math.max(...boxes.map(b=>b.y+b.height))+padding;
  await p.mouse.move(left,top);await p.mouse.down();for(const [x,y] of [[right,top],[right,bottom],[left,bottom],[left,top]])await p.mouse.move(x,y,{steps:12});await p.mouse.up();
  assert.equal(await p.locator('.node.selected').count(),2);await p.click('#toggle-properties');await p.fill('#property-name','Study');await p.click('#assign');assert.equal(await p.locator('.node-tags').count(),2);
  await quiz('Study');
