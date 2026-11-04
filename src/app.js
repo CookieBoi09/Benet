@@ -58,8 +58,29 @@ function drawEdges(){let edges='';for(const n of page.nodes){const p=page.nodes.
  $('#edges').innerHTML=edges;
 }
 function point(e){const r=$('#canvas').getBoundingClientRect(),v=page.view;return{x:(e.clientX-r.left-v.x)/v.z,y:(e.clientY-r.top-v.y)/v.z};}
-function create(p){recordTrace(p);const path=active&&traceOwner===active?[...trace,{...p}]:null;const n={id:uid(),text:'',x:p.x-105,y:p.y-35,parent:active,path,properties:[]};resetTrace();page.nodes.push(n);active=n.id;selected=new Set([n.id]);render();document.querySelector(`[data-node="${n.id}"] .node-content`).focus();save();}
-$('#nodes').addEventListener('input',e=>{const node=page.nodes.find(n=>n.id===e.target.closest('[data-node]')?.dataset.node);if(node){node.text=e.target.innerText;save();drawEdges();}});
+function centerEditor(editor){
+ if(quiz||page.readonly||drag||!editor?.matches('.node-content[contenteditable="true"]')||document.activeElement!==editor)return false;
+ const box=editor.closest('[data-node]'),node=page.nodes.find(n=>n.id===box.dataset.node);
+ if(!node)return false;
+ const canvas=$('#canvas'),bounds=canvas.getBoundingClientRect(),v=page.view;
+ let centerY=node.y+box.offsetHeight/2;
+ // For a box taller than the viewport, follow the insertion point instead.
+ if(box.offsetHeight*v.z>bounds.height-100){
+  const selection=window.getSelection();
+  if(selection?.focusNode&&editor.contains(selection.focusNode)){
+   const caret=document.createRange();caret.setStart(selection.focusNode,selection.focusOffset);caret.collapse(true);
+   const rect=caret.getClientRects()[0];
+   if(rect?.height)centerY=(rect.top+rect.height/2-bounds.top-v.y)/v.z;
+  }
+ }
+ const x=bounds.width/2-(node.x+box.offsetWidth/2)*v.z,y=bounds.height/2-centerY*v.z;
+ if(Math.abs(v.x-x)<.25&&Math.abs(v.y-y)<.25)return false;
+ v.x=x;v.y=y;resetTrace();transform();return true;
+}
+$('#nodes').addEventListener('focusin',e=>{if(centerEditor(e.target))save();});
+window.addEventListener('resize',()=>{if(centerEditor(document.activeElement))save();});
+function create(p){recordTrace(p);const path=active&&traceOwner===active?[...trace,{...p}]:null;const n={id:uid(),text:'',x:p.x-105,y:p.y-35,parent:active,path,properties:[]};resetTrace();page.nodes.push(n);active=n.id;selected=new Set([n.id]);render();document.querySelector(`[data-node="${n.id}"] .node-content`).focus({preventScroll:true});save();}
+$('#nodes').addEventListener('input',e=>{const node=page.nodes.find(n=>n.id===e.target.closest('[data-node]')?.dataset.node);if(node){node.text=e.target.innerText;centerEditor(e.target);save();drawEdges();}});
 $('#nodes').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();e.target.blur();$('#canvas').focus();}if(e.key==='Escape'){e.target.blur();active=null;drawEdges();}});
 $('#nodes').addEventListener('paste',e=>{if(!e.target.isContentEditable)return;e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));});
 $('#canvas').addEventListener('pointerdown',e=>{
@@ -78,7 +99,15 @@ $('#canvas').addEventListener('pointermove',e=>{pointer=point(e);if(drag?.type==
  for(const path of drag.paths){page.nodes.find(n=>n.id===path.id).path=shiftPath(path.points,path.source?delta:{x:0,y:0},path.source?{x:0,y:0}:delta);}
  resetTrace();drawEdges();
  }else if(drag?.type==='pan'){page.view.x=drag.v.x+e.clientX-drag.x;page.view.y=drag.v.y+e.clientY-drag.y;transform();}else if(drag?.type==='lasso'){polygon.push(point(e));const v=page.view;$('#overlay').innerHTML=`<polygon points="${polygon.map(p=>`${p.x*v.z+v.x},${p.y*v.z+v.y}`).join(' ')}"/>`;}else{recordTrace(pointer);drawEdges();}});
-function endDrag(){if(drag?.type==='node'&&drag.moved){active=null;resetTrace();$('#canvas').classList.remove('dragging-node');renderNodes();$('#canvas').focus();}if(drag?.type==='lasso'){selected=new Set(page.nodes.filter(n=>inside({x:n.x+105,y:n.y+height(n)/2},polygon)).map(n=>n.id));$('#overlay').innerHTML='';render();$('#canvas').focus();}if(drag)save();drag=null;}
+function endDrag(e){
+ const finished=drag;
+ if(finished?.type==='node'&&finished.moved){active=null;resetTrace();$('#canvas').classList.remove('dragging-node');renderNodes();$('#canvas').focus();}
+ if(finished?.type==='lasso'){selected=new Set(page.nodes.filter(n=>inside({x:n.x+105,y:n.y+height(n)/2},polygon)).map(n=>n.id));$('#overlay').innerHTML='';render();$('#canvas').focus();}
+ drag=null;
+ // Wait until release to distinguish a click-to-edit from dragging a box.
+ if(finished?.type==='node'&&!finished.moved&&e.type==='pointerup')centerEditor(document.activeElement);
+ if(finished)save();
+}
 $('#canvas').addEventListener('pointerup',endDrag);$('#canvas').addEventListener('pointercancel',endDrag);
 $('#canvas').addEventListener('contextmenu',e=>{e.preventDefault();active=null;resetTrace();document.activeElement?.blur();renderNodes();$('#canvas').focus();});
 function zoom(f,center){const v=page.view,r=$('#canvas').getBoundingClientRect(),c=center||{x:r.width/2,y:r.height/2},z=Math.max(.2,Math.min(2.5,v.z*f));v.x=c.x-(c.x-v.x)*z/v.z;v.y=c.y-(c.y-v.y)*z/v.z;v.z=z;transform();save();}

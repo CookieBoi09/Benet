@@ -1,5 +1,7 @@
 Benet — a place for growing ideas.
 
+Version 1.0.3 automatically centers the box being edited without changing zoom or node positions. Long boxes follow the insertion point; dragging stays manual.
+
 Version 1.0.2 replaces the fixed Properties sidebar with a compact toolbar dropdown. Click Properties to open all existing controls; Escape or an outside click closes it.
 
 Choose **arm64** for Apple Silicon (M1 or newer) or **x64** for Intel Macs. Open the DMG and drag Benet into Applications.
