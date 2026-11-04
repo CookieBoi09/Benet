@@ -1,0 +1,72 @@
+{
+  "name": "benet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "check": "node --check src/app.js && node --check src/model.js && node --check server.js && node --check desktop/main.cjs && node --check desktop/preload.cjs",
+    "build": "node scripts/build.js",
+    "prestart": "npm run build",
+    "desktop": "npm run build && electron .",
+    "dist:mac": "npm run build && electron-builder --mac dmg --publish never",
+    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:desktop": "node scripts/desktop-smoke.mjs"
+  },
+  "devDependencies": {
+    "electron": "45.2.2",
+    "electron-builder": "26.18.0",
+    "playwright": "1.64.1"
+  },
+  "description": "A forest-inspired mind mapping and recall workspace",
+  "author": "Jerry Fan",
+  "main": "desktop/main.cjs",
+  "build": {
+    "appId": "com.benet.mindmap",
+    "productName": "Benet",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "desktop/main.cjs",
+      "desktop/preload.cjs",
+      "build/icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "identity": null,
+      "icon": "build/icon.png",
+      "artifactName": "Benet-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Benet ${version}",
+      "contents": [
+        {
+          "x": 160,
+          "y": 180
+        },
+        {
+          "x": 420,
+          "y": 180,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
